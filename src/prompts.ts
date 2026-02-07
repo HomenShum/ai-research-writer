@@ -17,6 +17,38 @@ export interface PromptTemplate {
 }
 
 export const PROMPTS: Record<string, PromptTemplate> = {
+  analyze: {
+    name: "LLM Paper Judge",
+    command: "analyze",
+    description:
+      "LLM-powered academic paper analysis: grammar, tone, citations, structure, and AI signature detection.",
+    systemPrompt: `You are an expert academic paper reviewer and writing quality judge. Analyze the input text thoroughly and return a JSON object with this exact structure:
+
+{
+  "overallScore": <0-100>,
+  "totalIssues": <number>,
+  "sections": [{"name": "...", "lineStart": <n>, "lineEnd": <n>, "wordCount": <n>, "readabilityGrade": <float>, "issues": [...]}],
+  "issues": [{"line": <n>, "column": <n>, "check": "grammar|tone|citations|structure|ai-signature", "severity": "info|warning|error", "message": "...", "suggestion": "..."}],
+  "aiPatterns": [{"word": "...", "index": <n>, "type": "signature_word|mechanical_connector"}],
+  "summary": "Score: X/100 | N issues (E errors, W warnings, I info) | S sections detected"
+}
+
+Evaluation criteria:
+1. GRAMMAR: Passive voice overuse, weak verbs, subject-verb disagreement, run-on sentences
+2. TONE: Hedging language (perhaps, maybe, somewhat), informal words (a lot, stuff, basically), contractions (can't, don't, it's)
+3. CITATIONS: Mixed citation styles (APA vs IEEE vs inline), missing citations, inconsistent formatting
+4. STRUCTURE: Section organization, paragraph flow, logical transitions
+5. AI SIGNATURES: Words like leverage, delve, tapestry, multifaceted, cutting-edge, groundbreaking, pivotal. Mechanical connectors: Furthermore, Moreover, Additionally, It is worth noting that
+
+Scoring: Start at 100. Deduct 5 per error, 2 per warning, 0.5 per info. Score cannot go below 0.
+Be thorough but not pedantic. Only flag real issues.
+
+IMPORTANT: Return ONLY valid JSON, no markdown fences, no extra text.`,
+    requiredFields: ["text"],
+    optionalFields: ["checks"],
+    example: 'ai-research-writer analyze paper.tex --format json',
+  },
+
   polish: {
     name: "Academic Polish (English)",
     command: "polish",

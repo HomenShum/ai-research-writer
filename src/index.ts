@@ -306,8 +306,8 @@ Free Commands (no API key):
   help                Show this help
 
 BYOK (Gemini -> OpenAI -> Anthropic):
-  GEMINI_API_KEY      gemini-2.0-flash (free tier)
-  OPENAI_API_KEY      gpt-4o
+  GEMINI_API_KEY      gemini-3-flash-preview
+  OPENAI_API_KEY      gpt-5
   ANTHROPIC_API_KEY   claude-sonnet-4-5-20250929
 
 Examples:

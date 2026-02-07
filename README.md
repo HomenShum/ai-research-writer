@@ -142,7 +142,7 @@ src/
 - **Zero npm dependencies** for LLM calls. Uses Node.js built-in `fetch()`.
 - **Deterministic analysis** works offline with regex patterns.
 - **LLM commands** route through whichever API key you provide.
-- **Provider models**: Gemini 2.0 Flash, GPT-4o-mini, Claude Haiku 4.5
+- **Provider models**: Gemini 3 Flash, GPT-5 Mini, Claude Haiku 4.5
 
 ## Using with AI Agents
 
