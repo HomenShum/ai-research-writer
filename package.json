@@ -1,6 +1,6 @@
 {
   "name": "ai-research-writer",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "LLM-powered academic paper writing assistant with BYOK. Polish, translate, compress, expand, de-AI, review, and more — using battle-tested prompt templates adapted from awesome-ai-research-writing.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
