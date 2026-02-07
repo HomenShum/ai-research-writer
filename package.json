@@ -1,15 +1,18 @@
 {
   "name": "ai-research-writer",
-  "version": "1.0.0",
-  "description": "CLI tool to polish and elevate AI research papers — grammar, structure, citation formatting, and academic tone",
+  "version": "2.0.0",
+  "description": "LLM-powered academic paper writing assistant with BYOK. Polish, translate, compress, expand, de-AI, review, and more — using battle-tested prompt templates adapted from awesome-ai-research-writing.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "ai-research-writer": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "node --test src/__tests__/index.test.mjs"
+    "test": "node --test src/__tests__/index.test.mjs",
+    "demo": "node dist/index.js demo",
+    "prompts": "node dist/index.js prompts"
   },
   "keywords": [
     "ai",
@@ -18,12 +21,33 @@
     "paper",
     "polish",
     "academic",
-    "nlp"
+    "nlp",
+    "llm",
+    "byok",
+    "anthropic",
+    "openai",
+    "gemini",
+    "de-ai",
+    "peer-review",
+    "translation",
+    "latex"
   ],
   "author": "HomenShum",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^25.2.1",
+    "@types/node": "^22.15.2",
     "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HomenShum/ai-research-writer"
   }
 }
