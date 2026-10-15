@@ -2,24 +2,31 @@
 
 One CLI for polishing, translating, and de-AI-ing your research papers.
 
-Zero dependencies. Bring Your Own Key. 8 battle-tested prompt templates adapted from [awesome-ai-research-writing](https://github.com/Leey21/awesome-ai-research-writing).
+Version 3 runs multi-step LLM workflows with your own provider key. It has no npm runtime dependencies and includes 9 prompt templates adapted from [awesome-ai-research-writing](https://github.com/Leey21/awesome-ai-research-writing).
 
 ## Quick Start
 
-```bash
-# No install needed - just run with npx
-npx ai-research-writer polish paper.tex
+Requires **Node.js 18 or newer**. Start with `help` or `prompts` to inspect the tool without contacting a provider. `analyze` and `demo` both call the LLM, as do the other agent commands below.
 
-# Or install globally
-npm install -g ai-research-writer
+The current source checkout has a dependency metadata mismatch: `package.json` is version 3.0.0 and declares `@types/node` `^22.15.2`, while the lockfile still describes version 1.0.0 and `@types/node` `^25.2.1`. Reconcile that mismatch before relying on the following source setup; it is **not a verified clean-install path**:
+
+```bash
+git clone https://github.com/HomenShum/ai-research-writer.git
+cd ai-research-writer
+npm ci
+npm run build
+node dist/index.js help
+node dist/index.js prompts
 ```
+
+The build compiles TypeScript into `dist/`; `help` and `prompts` only print local information. The existing test/API mismatch is described under [Tests](#tests).
 
 ## BYOK Setup
 
-Set one environment variable. The CLI tries providers in this order: **Gemini -> OpenAI -> Anthropic**.
+For agent commands, configure a provider key in your shell. The CLI selects the first configured provider in this order: **Gemini -> OpenAI -> Anthropic**. A request failure is returned to the caller; it does not automatically retry another provider.
 
 ```bash
-# Option 1: Gemini (free tier available)
+# Option 1: Gemini
 export GEMINI_API_KEY="your-key-here"
 
 # Option 2: OpenAI
@@ -29,10 +36,12 @@ export OPENAI_API_KEY="sk-..."
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
-Get a free API key:
-- Gemini: https://aistudio.google.com/apikey (free tier)
+Provider key pages (account access, pricing and limits depend on the provider):
+- Gemini: https://aistudio.google.com/apikey
 - OpenAI: https://platform.openai.com/api-keys
 - Anthropic: https://console.anthropic.com/
+
+Current model IDs in [`src/provider.ts`](src/provider.ts) are `gemini-3-flash-preview`, `gpt-5`, and `claude-sonnet-4-5-20250929`. `GOOGLE_AI_API_KEY` is also accepted as a Gemini key alias. An agent command can make multiple LLM requests, including requests made by its tools.
 
 ## Commands
 
@@ -40,29 +49,33 @@ Get a free API key:
 
 | Command | Description |
 |---------|-------------|
-| `analyze <file>` | Regex-based grammar, tone, citation, and structure analysis |
-| `prompts` | List all 8 embedded prompt templates |
-| `demo` | Run analysis on built-in sample text |
+| `help` | Show supported commands and options |
+| `prompts` | Print all 9 embedded prompt templates |
 
-### LLM-Powered Commands (require API key)
+### Agent Commands (require API key)
 
 | Command | Description |
 |---------|-------------|
-| `polish <file>` | Polish text to top-venue publication standard |
-| `translate <file>` | Translate between English and Chinese (preserves LaTeX) |
-| `compress <file>` | Reduce word count while preserving all information |
-| `expand <file>` | Expand with depth, logical connections, and clarity |
-| `de-ai <file>` | Remove AI writing signatures (leverage, delve, tapestry...) |
-| `check-logic <file>` | Final red-line review for contradictions and logical gaps |
-| `caption` | Generate publication-quality figure/table captions |
-| `review <file>` | Simulate harsh peer review for a target venue |
+| `analyze <file>` | Ask the agent to analyze issues, writing patterns and quality |
+| `demo` | Run agent analysis on built-in sample text |
+| `polish <file>` | Request academic editing; optional `--venue` and `--lang` |
+| `translate <file>` | Request translation; requires `--from` and `--to` |
+| `compress <file>` | Request a shorter text; optional `--words` reduction |
+| `expand <file>` | Request a longer text; optional `--words` addition |
+| `de-ai <file>` | Request a rewrite of formulaic writing |
+| `check-logic <file>` | Request a consistency review; optional `--type` focus |
+| `caption` | Request a caption; requires `--desc` and `--type figure\|table` |
+| `review <file>` | Simulate peer review; requires `--venue` |
+
+CLI output is a human-readable agent result and trace. There is no implemented JSON-output or check-selection flag. Model-generated analysis and scores are advice to review, not deterministic acceptance gates or publication guarantees.
 
 ## Prompt Library
 
-The 8 embedded prompts are adapted from awesome-ai-research-writing and work with any LLM:
+The 9 standalone templates are available through `prompts` and the exported `PROMPTS` object. They describe intended tasks; their requested output formats are not a CLI JSON contract. CLI commands run the workflows in [`src/agent.ts`](src/agent.ts).
 
 | Prompt | What It Does |
 |--------|-------------|
+| **analyze** | Requests an academic writing analysis. |
 | **polish** | Senior academic editor. Removes contractions, dashes, bold/italic. Preserves LaTeX. Outputs polished text + modification log. |
 | **translate** | Bilingual academic translator (en/zh). Preserves LaTeX, citations, equations. Outputs translation + notes + back-translation verification. |
 | **compress** | Concise editor. Removes filler, merges redundancies. Outputs compressed text + stats + what was removed. |
@@ -72,77 +85,83 @@ The 8 embedded prompts are adapted from awesome-ai-research-writing and work wit
 | **caption** | Figure/table caption writer. Follows venue conventions. JSON output with short caption, long caption, and LaTeX. |
 | **review** | Harsh peer reviewer (rejection mindset). Checks novelty, soundness, clarity, significance, reproducibility. Rating 1-10 with strategic advice. |
 
-Run `ai-research-writer prompts` to see the full system prompts.
+Run `node dist/index.js prompts` after building to see the full templates without a provider call.
 
 ## Examples
 
 ```bash
-# Deterministic analysis (no API key needed)
-ai-research-writer analyze paper.tex --checks grammar,tone
-ai-research-writer analyze paper.tex --format json
-ai-research-writer demo
+# Inspect local information (after building, no provider call)
+node dist/index.js help
+node dist/index.js prompts
+
+# Agent analysis (requires a provider key)
+node dist/index.js analyze paper.tex
+node dist/index.js demo
 
 # Polish for a specific venue
-ai-research-writer polish paper.tex --venue "NeurIPS 2026"
+node dist/index.js polish paper.tex --venue "NeurIPS 2026"
 
 # Translate Chinese to English
-ai-research-writer translate paper.tex --from zh --to en --domain "computer vision"
+node dist/index.js translate paper.tex --from zh --to en --domain "computer vision"
 
 # Compress an abstract by 50 words
-ai-research-writer compress abstract.tex --words 50
+node dist/index.js compress abstract.tex --words 50
 
 # Expand an introduction by 100 words
-ai-research-writer expand intro.tex --words 100
+node dist/index.js expand intro.tex --words 100
 
 # Remove AI writing signatures
-ai-research-writer de-ai draft.tex
+node dist/index.js de-ai draft.tex
 
 # Check for logical contradictions
-ai-research-writer check-logic paper.tex --type contradictions
+node dist/index.js check-logic paper.tex --type contradictions
 
 # Generate a figure caption
-ai-research-writer caption --desc "accuracy vs epochs for 3 models on CIFAR-10" --type figure
+node dist/index.js caption --desc "accuracy vs epochs for 3 models on CIFAR-10" --type figure
 
 # Simulate a peer review
-ai-research-writer review paper.tex --venue "ICML 2026" --strictness harsh
+node dist/index.js review paper.tex --venue "ICML 2026" --strictness harsh
 
 # List all prompt templates
-ai-research-writer prompts
+node dist/index.js prompts
 ```
 
 ## Programmatic API
 
-```typescript
-import { analyzePaper, polish, deAi, PROMPTS, detectProviderName } from "ai-research-writer";
+After building, an ES module in the repository root can import the compiled API:
 
-// Deterministic analysis (no API key)
-const result = analyzePaper(text, { checks: ["grammar", "tone"] });
-console.log(result.overallScore); // 0-100
+```javascript
+import { analyze, polish, PROMPTS, detectProviderName } from "./dist/index.js";
 
-// LLM-powered commands (needs API key in env)
-const polished = await polish(text, { venue: "NeurIPS 2026" });
-console.log(polished.output);
-
-// Check which provider would be used
+// Local inspection only; does not contact a provider
 console.log(detectProviderName()); // "gemini" | "openai" | "anthropic" | null
-
-// Access raw prompts for use in other tools
 console.log(PROMPTS.polish.systemPrompt);
+
+// Both calls below require a configured provider and make LLM requests
+const text = "Your draft paragraph.";
+const result = await analyze(text);
+console.log(result.finalAnswer);
+console.log(result.provider, result.model, result.totalSteps);
+
+const polished = await polish(text, { venue: "NeurIPS 2026" });
+console.log(polished.finalAnswer);
 ```
+
+Agent commands return `AgentResult`: `steps`, `finalAnswer`, `totalSteps`, `provider`, and `model`. There is no typed numeric quality score or structured issue list in this result contract. File-based commands currently limit input to the first 12,000 characters; split longer manuscripts deliberately rather than assuming a whole-paper review.
 
 ## Architecture
 
 ```
 src/
-  prompts.ts    # 8 prompt templates (standalone, no dependencies)
+  prompts.ts    # 9 prompt templates (standalone, no dependencies)
   provider.ts   # BYOK provider with raw fetch() (Gemini -> OpenAI -> Anthropic)
-  index.ts      # CLI + analysis engine + LLM command wrappers
+  agent.ts      # Multi-step agent loop and LLM-backed tools
+  index.ts      # CLI and agent command wrappers
 ```
 
 - **Zero npm dependencies** for LLM calls. Uses Node.js built-in `fetch()`.
-- **Deterministic analysis** works offline with regex patterns.
-- **LLM commands** route through whichever API key you provide.
-- **Provider models**: Gemini 3 Flash, GPT-5 Mini, Claude Haiku 4.5
+- **Local inspection**: `help` and `prompts` work without an API key after building.
+- **Agent commands** use the first configured provider; tool calls can also invoke the LLM.
 
 ## Using with AI Agents
 
@@ -152,29 +171,27 @@ Add to your agent instructions:
 
 ```markdown
 When reviewing research papers, use ai-research-writer:
-1. Run `npx ai-research-writer analyze <file> --format json` for structured issues
-2. Fix all ERROR-severity issues first (contractions, etc.)
-3. Run `npx ai-research-writer de-ai <file>` to clean AI signatures
-4. Run `npx ai-research-writer review <file> --venue "NeurIPS"` for simulated peer review
-5. Target score 80+ before submitting
+1. Inspect `node dist/index.js help` and `node dist/index.js prompts` locally first.
+2. Before an agent command, confirm the provider, model and authorization to send manuscript text.
+3. Run `node dist/index.js analyze <file>` for a model-generated assessment.
+4. Review suggested changes against the manuscript, citations and venue requirements.
+5. Treat simulated peer review as advice; record independent checks before submitting.
 ```
 
 ### NodeBench MCP Integration
 
-If using [nodebench-mcp](https://www.npmjs.com/package/nodebench-mcp):
-
-1. **Recon**: `run_recon` on paper directory, `log_recon_finding` for each issue category
-2. **Verify**: `start_verification_cycle` to track polishing, `log_test_result` per check
-3. **Gate**: `run_quality_gate` to enforce score >= 80 and zero ERRORs
-4. **Learn**: `record_learning` to bank patterns for future papers
+This repository does not include an MCP adapter. An external integration must consume the current `AgentResult` contract and define its own independently verified acceptance criteria. Do not assume the CLI supplies machine-graded issue severities or a numeric pass threshold.
 
 ## Tests
 
+The test runner imports compiled files from `dist/`, so build first. These are the existing project commands, not a passing baseline:
+
 ```bash
+npm run build
 npm test
 ```
 
-40+ tests covering: regex analysis (10), provider detection (10), prompt validation (12), AI pattern detection (4), CLI integration (2), API exports (7).
+The current [`src/__tests__/index.test.mjs`](src/__tests__/index.test.mjs) still imports and asserts `analyzePaper` and `detectAiPatterns`, which are absent from the current [`src/index.ts`](src/index.ts) exports. The lockfile mismatch also remains unresolved. These source/test/dependency gaps need separate repair; this documentation update does not establish a clean install, passing tests, provider compatibility or manuscript quality.
 
 ## Credits
 
