@@ -8,7 +8,7 @@ Version 3 runs multi-step LLM workflows with your own provider key. It has no np
 
 Requires **Node.js 18 or newer**. Start with `help` or `prompts` to inspect the tool without contacting a provider. `analyze` and `demo` both call the LLM, as do the other agent commands below.
 
-The current source checkout has a dependency metadata mismatch: `package.json` is version 3.0.0 and declares `@types/node` `^22.15.2`, while the lockfile still describes version 1.0.0 and `@types/node` `^25.2.1`. Reconcile that mismatch before relying on the following source setup; it is **not a verified clean-install path**:
+From a source checkout, install the locked development tools and build before using the CLI:
 
 ```bash
 git clone https://github.com/HomenShum/ai-research-writer.git
@@ -19,7 +19,7 @@ node dist/index.js help
 node dist/index.js prompts
 ```
 
-The build compiles TypeScript into `dist/`; `help` and `prompts` only print local information. The existing test/API mismatch is described under [Tests](#tests).
+The build compiles TypeScript into `dist/`; `help` and `prompts` only print local information. Run the offline checks under [Tests](#tests) before making provider requests.
 
 ## BYOK Setup
 
@@ -184,14 +184,14 @@ This repository does not include an MCP adapter. An external integration must co
 
 ## Tests
 
-The test runner imports compiled files from `dist/`, so build first. These are the existing project commands, not a passing baseline:
+The test runner imports compiled files from `dist/`, so build first:
 
 ```bash
 npm run build
 npm test
 ```
 
-The current [`src/__tests__/index.test.mjs`](src/__tests__/index.test.mjs) still imports and asserts `analyzePaper` and `detectAiPatterns`, which are absent from the current [`src/index.ts`](src/index.ts) exports. The lockfile mismatch also remains unresolved. These source/test/dependency gaps need separate repair; this documentation update does not establish a clean install, passing tests, provider compatibility or manuscript quality.
+The offline suite exercises the current `analyze`/`deAi` API, real agent/tool loops, input truncation, failure handling, concurrent state isolation and CLI exit behavior. It intercepts fetch responses and gives CLI subprocesses no provider keys; no external model requests are needed. These checks establish the local contract, not provider compatibility, model output quality or whole-manuscript correctness.
 
 ## Credits
 
